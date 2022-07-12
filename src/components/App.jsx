@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { Container } from './App.styled';
 import Searchbar from './Searchbar';
+import ImageGallery from './ImageGallery';
 
 const KEY = '27626475-8422ee6256ea07f97d3a4bc44';
 class App extends Component {
@@ -21,6 +22,7 @@ class App extends Component {
     return (
       <Container>
         <Searchbar onSubmitForm={this.handleSubmit} />
+        <ImageGallery />
         <ToastContainer autoClose={4000} />
       </Container>
     );
