@@ -1,31 +1,102 @@
 import React, { Component } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import { Container } from './App.styled';
+import { ToastContainer } from 'react-toastify';
+import style from './app.module.css';
 import Searchbar from './Searchbar';
 import ImageGallery from './ImageGallery';
+import Button from 'components/Button';
+import API from 'services/API';
+import Loader from './Loader';
 
-const KEY = '27626475-8422ee6256ea07f97d3a4bc44';
 class App extends Component {
-  state = { searchQuery: '' };
-  handleSubmit = searchQuery => {
-    this.setState({ searchQuery });
+  state = {
+    searchQuery: '',
+    gallery: [],
+    page: 1,
+    error: null,
+    status: 'idle',
   };
-  componentDidMount() {
-    // `https://pixabay.com/api/?q=cat&page=1&key=${KEY}_type=photo&orientation=horizontal&per_page=12`;
-    fetch(
-      `https://pixabay.com/api/?q=cat&page=1&key=${KEY}&image_type=photo&orientation=horizontal&per_page=12`
-    )
-      .then(res => res.json())
-      .then(console.log);
+  handleSubmit = searchQuery => {
+    this.setState({ searchQuery, page: 1 });
+  };
+  async componentDidUpdate(prevProps, prevState) {
+    const prevQuery = prevState.searchQuery;
+    const newQuery = this.state.searchQuery;
+    const prevPage = prevState.page;
+    const newPage = this.state.page;
+
+    if (prevQuery !== newQuery) {
+      this.setState({ page: 1, gallery: [] });
+    }
+    if (prevQuery !== newQuery || prevPage !== newPage) {
+      this.setState({ status: 'pending' });
+
+      try {
+        const gallery = await API.getGallery(newQuery, newPage);
+
+        if (gallery.total === 0) {
+          return this.setState({
+            error: `Not found ${newQuery}`,
+            status: 'rejected',
+          });
+        } else {
+          return this.setState(prevState => ({
+            gallery: [...prevState.gallery, ...gallery.hits],
+            status: 'resolved',
+          }));
+        }
+      } catch (error) {
+        this.setState({ error, status: 'rejected' });
+      }
+    }
   }
+
+  loadMoreBtn = () => {
+    this.setState(prevState => ({
+      page: prevState.page + 1,
+    }));
+  };
+
   render() {
-    return (
-      <Container>
-        <Searchbar onSubmitForm={this.handleSubmit} />
-        <ImageGallery />
-        <ToastContainer autoClose={4000} />
-      </Container>
-    );
+    const { error, status, gallery } = this.state;
+
+    if (status === 'idle') {
+      return (
+        <div>
+          <Searchbar onSubmitForm={this.handleSubmit} />
+          <ToastContainer />
+        </div>
+      );
+    }
+
+    if (status === 'pending') {
+      return (
+        <div>
+          <Searchbar onSubmitForm={this.handleSubmit} />
+          <ToastContainer />
+          <Loader />
+        </div>
+      );
+    }
+    if (status === 'rejected') {
+      return (
+        <div>
+          <Searchbar onSubmitForm={this.handleSubmit} />
+          <h1>{error}</h1>
+          <ToastContainer />
+        </div>
+      );
+    }
+    if (status === 'resolved') {
+      return (
+        <div className={style.app}>
+          <Searchbar onSubmitForm={this.handleSubmit} />
+          <ToastContainer />
+          <ImageGallery gallery={gallery}></ImageGallery>
+          <Button onClick={this.loadMoreBtn}>Load more...</Button>
+          <ToastContainer />
+        </div>
+      );
+    }
   }
 }
 

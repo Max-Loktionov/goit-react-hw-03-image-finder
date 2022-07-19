@@ -1,0 +1,10 @@
+.spinner {
+  display: flex;
+  margin: 24px auto;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(168, 235, 126);
+  color: #00bfff;
+  height: 220px;
+  width: 220px;
+}
