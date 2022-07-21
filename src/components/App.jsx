@@ -7,13 +7,19 @@ import Button from 'components/Button';
 import API from 'services/API';
 import Loader from './Loader';
 
+const Status = {
+  IDLE: 'idle',
+  PENDING: 'pending',
+  RESOLVED: 'resolved',
+  REJECTED: 'rejected',
+};
 class App extends Component {
   state = {
     searchQuery: '',
     gallery: [],
     page: 1,
     error: null,
-    status: 'idle',
+    status: Status.IDLE,
   };
   handleSubmit = searchQuery => {
     this.setState({ searchQuery, page: 1 });
@@ -28,7 +34,7 @@ class App extends Component {
       this.setState({ page: 1, gallery: [] });
     }
     if (prevQuery !== newQuery || prevPage !== newPage) {
-      this.setState({ status: 'pending' });
+      this.setState({ status: Status.PENDING });
 
       try {
         const gallery = await API.getGallery(newQuery, newPage);
@@ -36,16 +42,16 @@ class App extends Component {
         if (gallery.total === 0) {
           return this.setState({
             error: `Not found ${newQuery}`,
-            status: 'rejected',
+            status: Status.REJECTED,
           });
         } else {
           return this.setState(prevState => ({
             gallery: [...prevState.gallery, ...gallery.hits],
-            status: 'resolved',
+            status: Status.RESOLVED,
           }));
         }
       } catch (error) {
-        this.setState({ error, status: 'rejected' });
+        this.setState({ error, status: Status.REJECTED });
       }
     }
   }
@@ -59,7 +65,7 @@ class App extends Component {
   render() {
     const { error, status, gallery } = this.state;
 
-    if (status === 'idle') {
+    if (status === Status.IDLE) {
       return (
         <div>
           <Searchbar onSubmitForm={this.handleSubmit} />
@@ -68,31 +74,34 @@ class App extends Component {
       );
     }
 
-    if (status === 'pending') {
+    if (status === Status.PENDING) {
       return (
-        <div>
+        <div className={style.app}>
           <Searchbar onSubmitForm={this.handleSubmit} />
           <ToastContainer />
+          <ImageGallery gallery={gallery}></ImageGallery>
           <Loader />
+          <Button onClick={this.loadMoreBtn}>Load more...</Button>
         </div>
       );
     }
-    if (status === 'rejected') {
-      return (
-        <div>
-          <Searchbar onSubmitForm={this.handleSubmit} />
-          <h1>{error}</h1>
-          <ToastContainer />
-        </div>
-      );
-    }
-    if (status === 'resolved') {
+
+    if (status === Status.RESOLVED) {
       return (
         <div className={style.app}>
           <Searchbar onSubmitForm={this.handleSubmit} />
           <ToastContainer />
           <ImageGallery gallery={gallery}></ImageGallery>
           <Button onClick={this.loadMoreBtn}>Load more...</Button>
+          <ToastContainer />
+        </div>
+      );
+    }
+    if (status === Status.REJECTED) {
+      return (
+        <div>
+          <Searchbar onSubmitForm={this.handleSubmit} />
+          <h1>{error}</h1>
           <ToastContainer />
         </div>
       );
