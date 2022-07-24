@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import { ToastContainer } from 'react-toastify';
+// import * as Scroll from 'react-scroll';
+import { animateScroll as scroll } from 'react-scroll';
 import style from './app.module.css';
 import Searchbar from './Searchbar';
 import ImageGallery from './ImageGallery';
@@ -24,6 +26,13 @@ class App extends Component {
   handleSubmit = searchQuery => {
     this.setState({ searchQuery, page: 1 });
   };
+  // scroll = Scroll.animateScroll.scrollTo(100, {
+  //   duration: 1500,
+  //   delay: 100,
+  //   smooth: true,
+  //   // offset: 50,
+  // });
+
   async componentDidUpdate(prevProps, prevState) {
     const prevQuery = prevState.searchQuery;
     const newQuery = this.state.searchQuery;
@@ -38,7 +47,12 @@ class App extends Component {
 
       try {
         const gallery = await API.getGallery(newQuery, newPage);
-
+        scroll.scrollToBottom({
+          smooth: true,
+          offset: 100,
+          duration: 2000,
+          delay: 300,
+        });
         if (gallery.total === 0) {
           return this.setState({
             error: `Not found ${newQuery}`,
