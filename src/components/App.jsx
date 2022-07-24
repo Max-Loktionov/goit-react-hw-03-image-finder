@@ -26,12 +26,6 @@ class App extends Component {
   handleSubmit = searchQuery => {
     this.setState({ searchQuery, page: 1 });
   };
-  // scroll = Scroll.animateScroll.scrollTo(100, {
-  //   duration: 1500,
-  //   delay: 100,
-  //   smooth: true,
-  //   // offset: 50,
-  // });
 
   async componentDidUpdate(prevProps, prevState) {
     const prevQuery = prevState.searchQuery;
